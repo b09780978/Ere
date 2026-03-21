@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ere Lite IDE - Cross-Platform Zero Gap</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ere Lite IDE v3.0</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
@@ -12,59 +12,41 @@
         :root { --bg: #272822; --nav: #191919; --sidebar: #21221d; --border: #3e3d32; --text: #f8f8f2; --accent: #a6e22e; --blue: #66d9ef; --pink: #f92672; --gray: #75715e; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        /* 移除所有 Flex 影響，改用純 Block 佈局 */
-        body { 
-            font-family: 'Consolas', monospace; margin: 0; background: var(--bg); color: var(--text); 
-            min-height: 100vh; overflow-x: hidden; display: block;
-        }
+        body { font-family: 'Consolas', monospace; margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: block; overflow-x: hidden; }
         
-        /* Sticky Header Group */
+        /* Header */
         .header-group { position: sticky; top: 0; z-index: 1000; background: var(--nav); }
         .navbar { background: var(--nav); height: 45px; display: flex; align-items: center; padding: 0 10px; border-bottom: 1px solid #000; }
         .nav-title { font-weight: bold; color: var(--accent); font-size: 14px; margin-right: 10px; cursor: pointer; }
-        .nav-btns { display: flex; gap: 5px; margin-left: auto; }
-        .btn { background: #333; color: #ccc; border: 1px solid #555; padding: 6px 10px; cursor: pointer; font-size: 11px; border-radius: 4px; }
+        .nav-btns { display: flex; gap: 4px; margin-left: auto; }
+        .btn { background: #333; color: #ccc; border: 1px solid #555; padding: 5px 8px; cursor: pointer; font-size: 11px; border-radius: 4px; }
         
         .mobile-tools { display: flex; background: #333; padding: 6px; gap: 6px; border-bottom: 1px solid var(--border); overflow-x: auto; }
         .tool-btn { background: #444; color: #eee; border: 1px solid #666; padding: 8px 14px; border-radius: 4px; font-size: 14px; flex-shrink: 0; }
 
-        /* Sidebar Overlay */
-        .sidebar { 
-            position: fixed; top: 0; left: -240px; width: 220px; height: 100vh;
-            background: var(--sidebar); border-right: 1px solid var(--border); 
-            transition: 0.3s; z-index: 2000; display: flex; flex-direction: column; 
-        }
+        /* Sidebar */
+        .sidebar { position: fixed; top: 0; left: -240px; width: 220px; height: 100vh; background: var(--sidebar); border-right: 1px solid var(--border); transition: 0.3s; z-index: 2000; display: flex; flex-direction: column; }
         .sidebar.open { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.7); }
 
-        /* Editor Section: 絕對禁止任何 margin/padding */
-        .editor-container { background: var(--bg); margin: 0; padding: 0; line-height: 0; }
-        .CodeMirror { 
-            height: auto !important; 
-            min-height: 300px; 
-            font-size: 16px; 
-            line-height: 1.5;
-            background: var(--bg) !important;
-        }
-        /* 深度清除 CodeMirror 內部的撐開機制 */
-        .CodeMirror-scroll { padding-bottom: 0 !important; min-height: 300px; }
+        /* Editor Section - 終極消除空格 */
+        .editor-container { background: var(--bg); margin: 0 !important; padding: 0 !important; line-height: 0 !important; font-size: 0 !important; }
+        .CodeMirror { height: auto !important; min-height: 300px; font-size: 16px; line-height: 1.5; background: var(--bg) !important; border: none !important; }
+        /* 強制清除 CM 所有內建高度撐開 */
+        .CodeMirror-scroll { padding-bottom: 0 !important; margin-bottom: 0 !important; min-height: 300px; }
         .CodeMirror-lines { padding-bottom: 0 !important; }
+        .CodeMirror-gutter-filler, .CodeMirror-scrollbar-filler { display: none !important; }
 
-        /* Output Area: 確保與上方 Editor 縫合 */
-        .output-tabs { 
-            display: flex; background: #000; border-top: 1px solid #000; 
-            position: sticky; top: 85px; z-index: 999; margin-top: -1px; /* 向上微調 1px 確保遮住縫隙 */
-        }
+        /* Output Tabs - 物理貼合 */
+        .output-tabs { display: flex; background: #000; border-top: 1px solid #000; position: sticky; top: 85px; z-index: 999; margin-top: -1px; }
         .tab-btn { padding: 12px 15px; font-size: 11px; color: var(--gray); cursor: pointer; border-right: 1px solid var(--border); background: #1a1a1a; }
         .tab-btn.active { background: #121212; color: var(--accent); font-weight: bold; }
 
-        .log-panel { 
-            height: 220px; background: #121212; padding: 12px; overflow: auto; 
-            font-size: 13px; color: #eee; display: none; -webkit-overflow-scrolling: touch;
-        }
+        .log-panel { height: 250px; background: #121212; padding: 12px; overflow: auto; font-size: 13px; color: #eee; display: none; -webkit-overflow-scrolling: touch; }
         .log-panel.active { display: block; }
         #console-output, #system-log { white-space: pre; font-family: 'Consolas', monospace; display: inline-block; min-width: 100%; }
 
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 1500; }
+        .wiki-link { color: var(--blue); text-decoration: underline; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -74,7 +56,9 @@
         <div class="nav-title" onclick="toggleSidebar()">☰ MENU</div>
         <div id="tab-indicator" style="font-size: 11px; color: var(--gray);">main.py</div>
         <div class="nav-btns">
+            <button class="btn" onclick="showWiki()" style="color:var(--accent)">Wiki</button>
             <button class="btn" onclick="saveFile()" style="color:var(--blue)">Save</button>
+            <button class="btn" onclick="clearLogs()" style="color:var(--pink)">Clear</button>
             <button class="btn" onclick="runScript()" style="color:var(--accent); font-weight:bold;">Run</button>
         </div>
     </nav>
@@ -118,7 +102,6 @@
     let pyodide = null;
     let savedFiles = JSON.parse(localStorage.getItem('ere_saved')) || { 'main.py': '' };
     let currentSession = JSON.parse(localStorage.getItem('ere_session')) || { ...savedFiles };
-    let dirtyFiles = new Set();
     let activeFile = localStorage.getItem('ere_active') || 'main.py';
 
     const editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
@@ -126,10 +109,27 @@
         viewportMargin: Infinity, inputStyle: "contenteditable"
     });
 
-    window.addEventListener('keydown', e => {
-        if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); runScript(); }
-        if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveFile(); }
-    });
+    function showWiki() {
+        switchTab('system');
+        const log = document.getElementById('system-log');
+        log.innerHTML = `<div style="color:var(--accent); border-bottom:1px solid #444; padding-bottom:5px; margin-bottom:10px;">📚 Ere Lite Wiki / Docs</div>
+1. **Pyodide**: 瀏覽器端的 Python 運行環境。
+2. **Persistence**: 檔案存於 LocalStorage，清除瀏覽器快取會消失。
+3. **Libraries**: 支援 numpy, pandas, matplotlib 等。
+   使用 \`import numpy\` 會自動觸發下載。
+4. **Shortcuts**: 
+   - [Ctrl + Enter]: 執行程式碼
+   - [Ctrl + S]: 儲存目前檔案
+5. **Clear**: 同時清除 Console 與此日誌。
+-------------------------------------------`;
+        logToSystem("Wiki loaded.");
+    }
+
+    function clearLogs() {
+        document.getElementById('console-output').innerHTML = "";
+        document.getElementById('system-log').innerHTML = "";
+        logToSystem("Logs cleared.", 'var(--pink)');
+    }
 
     function logToSystem(msg, color = 'var(--gray)') {
         const log = document.getElementById('system-log');
@@ -151,28 +151,13 @@
         }
     }
 
-    editor.on("keyup", (cm, e) => {
-        if ([13, 27, 37, 38, 39, 40, 9, 16, 17, 18].includes(e.keyCode)) return;
-        if (cm.getTokenAt(cm.getCursor()).string.match(/[a-zA-Z_\.]/)) {
-            setTimeout(() => { if (!cm.state.completionActive) triggerHint(); }, 150);
-        }
-    });
-
-    function triggerHint() { editor.focus(); editor.showHint({ completeSingle: false, container: document.body }); }
-    function insertText(t) { editor.replaceRange(t, editor.getCursor()); editor.focus(); }
-    function insertQuote(q) {
-        const s = editor.getSelection();
-        editor.replaceSelection(s ? q+s+q : q);
-        editor.focus();
-    }
-
     function renderSidebar() {
         const list = document.getElementById('file-list');
         list.innerHTML = '';
         Object.keys(savedFiles).forEach(name => {
             const div = document.createElement('div');
             div.style = `padding: 16px 15px; border-bottom: 1px solid #2d2e27; cursor:pointer; color:${name === activeFile ? 'var(--blue)' : '#ccc'}`;
-            div.innerHTML = `<span>${name}</span>${dirtyFiles.has(name) ? ' •' : ''}`;
+            div.innerHTML = `<span>${name}</span>`;
             div.onclick = () => { switchFile(name); toggleSidebar(); };
             list.appendChild(div);
         });
@@ -184,7 +169,7 @@
     }
 
     function switchFile(n) { activeFile = n; localStorage.setItem('ere_active', n); editor.setValue(currentSession[n] || ""); renderSidebar(); }
-    function saveFile() { savedFiles[activeFile] = editor.getValue(); dirtyFiles.delete(activeFile); localStorage.setItem('ere_saved', JSON.stringify(savedFiles)); renderSidebar(); logToSystem(`Saved: ${activeFile}`, 'var(--blue)'); }
+    function saveFile() { savedFiles[activeFile] = editor.getValue(); localStorage.setItem('ere_saved', JSON.stringify(savedFiles)); renderSidebar(); logToSystem(`Saved: ${activeFile}`, 'var(--blue)'); }
     function addFile() { let n = prompt("Filename:"); if (n) { if (!n.includes('.')) n += '.py'; savedFiles[n] = ""; currentSession[n] = ""; switchFile(n); } }
 
     async function runScript() {
@@ -222,6 +207,21 @@
             logToSystem(err.message, 'var(--pink)');
             switchTab('system');
         }
+    }
+
+    editor.on("keyup", (cm, e) => {
+        if ([13, 27, 37, 38, 39, 40, 9, 16, 17, 18].includes(e.keyCode)) return;
+        if (cm.getTokenAt(cm.getCursor()).string.match(/[a-zA-Z_\.]/)) {
+            setTimeout(() => { if (!cm.state.completionActive) triggerHint(); }, 150);
+        }
+    });
+
+    function triggerHint() { editor.focus(); editor.showHint({ completeSingle: false, container: document.body }); }
+    function insertText(t) { editor.replaceRange(t, editor.getCursor()); editor.focus(); }
+    function insertQuote(q) {
+        const s = editor.getSelection();
+        editor.replaceSelection(s ? q+s+q : q);
+        editor.focus();
     }
 
     renderSidebar();
