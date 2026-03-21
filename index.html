@@ -148,17 +148,31 @@
     }
 
     // 自動補全邏輯 (行動端優化)
-    editor.on("inputRead", function(cm, change) {
-        if (change.origin === "+input") {
-            const cur = cm.getCursor();
-            const token = cm.getTokenAt(cur);
-            if (token.string.match(/[a-zA-Z_\.]/)) {
-                setTimeout(() => {
-                    if (!cm.state.completionActive) triggerHint();
-                }, 150);
+    editor.on("keyup", function (cm, event) {
+        // 排除掉導航鍵、Enter、Esc 等不需補全的按鍵
+        const excludedKeys = [13, 27, 37, 38, 39, 40, 9, 16, 17, 18];
+        if (excludedKeys.includes(event.keyCode)) return;
+
+        const cur = cm.getCursor();
+        const token = cm.getTokenAt(cur);
+
+        // 只要當前輸入的是字母、底線或點號（物件方法），就強制觸發
+        if (token.string.match(/[a-zA-Z_\.]/)) {
+            if (!cm.state.completionActive) {
+                cm.showHint({ 
+                    completeSingle: false, 
+                    container: document.body,
+                    closeOnUnfocus: false // 防止手機失去焦點時消失
+                });
             }
         }
     });
+
+    // 額外保險：當手機點擊 Hint 按鈕時，強制將焦點還給編輯器
+    function triggerHint() {
+        editor.focus();
+        editor.showHint({ completeSingle: false, container: document.body });
+    }
 
     // 狀態管理
     Object.keys(currentSession).forEach(f => { if (currentSession[f] !== savedFiles[f]) dirtyFiles.add(f); });
