@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>Pyodide Browser IDE</title>
+    <!-- 引入 Pyodide -->
+    <script src="pyodide/pyodide.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #code { width: 100%; height: 200px; font-family: monospace; }
+        #output { width: 100%; height: 150px; background-color: #f0f0f0; border: 1px solid #ccc; overflow-y: scroll; padding: 10px; margin-top: 10px; }
+        button { padding: 10px 20px; margin-top: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Pyodide Python IDE</h2>
+    <textarea id="code" spellcheck="false"># 在此輸入 Python 代碼
+import sys
+print("Hello from Pyodide!")
+print(f"Python 版本: {sys.version}")
+</textarea>
+    <br>
+    <button onclick="evaluatePython()">執行 Python</button>
+    <div id="output">輸出結果將顯示在這裡...</div>
+
+    <script>
+        let pyodideReadyPromise;
+        const output = document.getElementById("output");
+        const codeInput = document.getElementById("code");
+
+        // 將 stdout 導向至 HTML
+        function addToOutput(s) {
+            output.innerHTML += "<div>" + s + "</div>";
+            output.scrollTop = output.scrollHeight; // 自動捲動到底部
+        }
+
+        // 初始化 Pyodide
+        async function setupPyodide() {
+            addToOutput("正在載入 Pyodide...");
+            pyodideReadyPromise = await loadPyodide();
+            addToOutput("Pyodide 載入完成！");
+        }
+        setupPyodide();
+
+        // 執行 Python 代碼
+        async function evaluatePython() {
+            pyodideReadyPromise = await pyodideReadyPromise;
+            let code = codeInput.value;
+            output.innerHTML = ""; // 清空舊輸出
+            
+            try {
+                // 將輸出捕獲到 JavaScript
+                pyodideReadyPromise.runPython(`
+import sys
+import io
+sys.stdout = io.StringIO()
+                `);
+                
+                // 執行代碼
+                pyodideReadyPromise.runPython(code);
+                
+                // 獲取輸出
+                let stdout = pyodideReadyPromise.runPython("sys.stdout.getvalue()");
+                addToOutput(stdout);
+            } catch (err) {
+                addToOutput("<span style='color:red;'>" + err + "</span>");
+            }
+        }
+    </script>
+</body>
+</html>
