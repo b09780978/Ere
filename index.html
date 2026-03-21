@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ere Lite IDE - Ultimate</title>
+    <title>Ere Lite IDE - Final</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
@@ -13,7 +13,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Consolas', monospace; margin: 0; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; position: fixed; width: 100%; }
         
-        /* Navigation */
+        /* Navbar */
         .navbar { background: var(--nav); height: 45px; display: flex; align-items: center; padding: 0 10px; border-bottom: 1px solid #000; flex-shrink: 0; z-index: 100; }
         .nav-title { font-weight: bold; color: var(--accent); font-size: 14px; margin-right: 10px; cursor: pointer; }
         .nav-btns { display: flex; gap: 5px; margin-left: auto; }
@@ -22,15 +22,15 @@
         /* Mobile Tool Bar */
         .mobile-tools { display: flex; background: #333; padding: 6px; gap: 6px; border-bottom: 1px solid var(--border); overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .mobile-tools::-webkit-scrollbar { display: none; }
-        .tool-btn { background: #444; color: #eee; border: 1px solid #666; padding: 5px 14px; border-radius: 4px; font-size: 14px; flex-shrink: 0; min-width: 45px; text-align: center; }
+        .tool-btn { background: #444; color: #eee; border: 1px solid #666; padding: 6px 14px; border-radius: 4px; font-size: 14px; flex-shrink: 0; min-width: 48px; text-align: center; }
 
-        /* Layout */
+        /* Main Layout */
         .main-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .upper-layout { flex: 1; display: flex; overflow: hidden; position: relative; }
-        .sidebar { width: 220px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; }
+        .sidebar { width: 220px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; z-index: 1000; }
         
         @media (max-width: 768px) {
-            .sidebar { position: absolute; left: -220px; height: 100%; z-index: 99; }
+            .sidebar { position: absolute; left: -220px; height: 100%; }
             .sidebar.open { left: 0; box-shadow: 10px 0 20px rgba(0,0,0,0.5); }
         }
 
@@ -43,27 +43,28 @@
         .editor-section { flex: 1; display: flex; flex-direction: column; background: var(--bg); min-width: 0; }
         .CodeMirror { height: 100% !important; font-size: 16px; line-height: 1.5; }
 
-        /* Hint Menu UI */
-        .CodeMirror-hints { background: #2d2d2d !important; border: 1px solid #555 !important; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-        .CodeMirror-hint { padding: 12px 18px !important; color: #ddd !important; font-size: 14px; border-bottom: 1px solid #3d3d3d; }
+        /* Auto-complete (Hint) UI */
+        .CodeMirror-hints { 
+            z-index: 9999 !important; 
+            background: #2d2d2d !important; 
+            border: 1px solid #555 !important; 
+            border-radius: 6px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+        }
+        .CodeMirror-hint { padding: 12px 18px !important; color: #ddd !important; font-size: 15px; border-bottom: 1px solid #3d3d3d; }
         .CodeMirror-hint-active { background: var(--blue) !important; color: #000 !important; }
 
+        /* Console Output */
         #console-panel { height: 160px; background: #121212; border-top: 2px solid #000; padding: 12px; overflow-y: auto; font-size: 13px; color: #eee; flex-shrink: 0; }
-        
-        /* Modal & Overlay */
-        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; background: #252526; border: 1px solid var(--border); display: none; flex-direction: column; z-index: 1001; border-radius: 8px; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
-        .modal-header { background: #333; padding: 12px; font-size: 12px; display: flex; justify-content: space-between; border-radius: 8px 8px 0 0; }
-        .modal-body { padding: 20px; font-size: 14px; color: #ccc; line-height: 1.6; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 1000; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 999; }
     </style>
 </head>
 <body>
 
 <nav class="navbar">
     <div class="nav-title" onclick="toggleSidebar()">☰ ERE LITE</div>
-    <div id="tab-indicator" style="font-size: 11px; color: var(--gray); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 100px;">main.py</div>
+    <div id="tab-indicator" style="font-size: 11px; color: var(--gray); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px;">main.py</div>
     <div class="nav-btns">
-        <button class="btn" onclick="toggleModal('wiki-modal')">Wiki</button>
         <button class="btn" onclick="saveFile()" style="color:var(--blue)">Save</button>
         <button class="btn" onclick="runScript()" style="color:var(--accent); font-weight:bold;">Run</button>
     </div>
@@ -99,18 +100,7 @@
     <div id="console-panel"><div id="console-output" style="white-space: pre-wrap;"></div></div>
 </div>
 
-<div id="overlay" class="overlay" onclick="closeAllModals()"></div>
-
-<div id="wiki-modal" class="modal">
-    <div class="modal-header"><span>IDE WIKI</span><span style="cursor:pointer" onclick="closeAllModals()">✕</span></div>
-    <div class="modal-body">
-        • 點擊 <b>☰</b> 切換或刪除檔案<br>
-        • <b>Hint</b> 鈕強制呼叫建議選單<br>
-        • 選取文字後點 <b>"</b> 或 <b>'</b> 可快速包覆<br>
-        • 執行前請務必點擊 <b>Save</b><br>
-        • 支援匯入匯出任何文字檔案
-    </div>
-</div>
+<div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
@@ -126,11 +116,34 @@
 
     const editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
         mode: "python", theme: "monokai", lineNumbers: true, indentUnit: 4, matchBrackets: true,
-        inputStyle: "contenteditable", // 手機相容性
+        inputStyle: "contenteditable",
         extraKeys: { "Ctrl-Space": "autocomplete" }
     });
 
-    // 智慧插入功能
+    // 強力手機自動補全觸發 (keyup + 延遲)
+    editor.on("keyup", function (cm, event) {
+        const excludedKeys = [13, 27, 37, 38, 39, 40, 9, 16, 17, 18];
+        if (excludedKeys.includes(event.keyCode)) return;
+
+        const cur = cm.getCursor();
+        const token = cm.getTokenAt(cur);
+
+        // 輸入字母或點號時觸發
+        if (token.string.match(/[a-zA-Z_\.]/)) {
+            setTimeout(() => {
+                if (!cm.state.completionActive) {
+                    cm.showHint({ completeSingle: false, container: document.body });
+                }
+            }, 150);
+        }
+    });
+
+    function triggerHint() {
+        editor.focus();
+        editor.showHint({ completeSingle: false, container: document.body });
+    }
+
+    // 智慧工具列功能
     function insertText(text) { editor.replaceRange(text, editor.getCursor()); editor.focus(); }
     
     function insertQuote(q) {
@@ -143,38 +156,7 @@
         editor.focus();
     }
 
-    function triggerHint() {
-        editor.showHint({ completeSingle: false, container: document.body });
-    }
-
-    // 自動補全邏輯 (行動端優化)
-    editor.on("keyup", function (cm, event) {
-        // 排除掉導航鍵、Enter、Esc 等不需補全的按鍵
-        const excludedKeys = [13, 27, 37, 38, 39, 40, 9, 16, 17, 18];
-        if (excludedKeys.includes(event.keyCode)) return;
-
-        const cur = cm.getCursor();
-        const token = cm.getTokenAt(cur);
-
-        // 只要當前輸入的是字母、底線或點號（物件方法），就強制觸發
-        if (token.string.match(/[a-zA-Z_\.]/)) {
-            if (!cm.state.completionActive) {
-                cm.showHint({ 
-                    completeSingle: false, 
-                    container: document.body,
-                    closeOnUnfocus: false // 防止手機失去焦點時消失
-                });
-            }
-        }
-    });
-
-    // 額外保險：當手機點擊 Hint 按鈕時，強制將焦點還給編輯器
-    function triggerHint() {
-        editor.focus();
-        editor.showHint({ completeSingle: false, container: document.body });
-    }
-
-    // 狀態管理
+    // 狀態同步與監聽
     Object.keys(currentSession).forEach(f => { if (currentSession[f] !== savedFiles[f]) dirtyFiles.add(f); });
 
     editor.on("change", () => {
@@ -188,6 +170,7 @@
         }
     });
 
+    // 側邊欄與檔案管理
     function renderSidebar() {
         const list = document.getElementById('file-list');
         list.innerHTML = '';
@@ -202,8 +185,13 @@
         document.getElementById('tab-indicator').textContent = activeFile + (dirtyFiles.has(activeFile) ? " •" : "");
     }
 
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-    
+    function toggleSidebar() { 
+        const sb = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        sb.classList.toggle('open');
+        overlay.style.display = sb.classList.contains('open') ? 'block' : 'none';
+    }
+
     function switchFile(name) {
         activeFile = name;
         localStorage.setItem('ere_active', name);
@@ -213,7 +201,7 @@
     }
 
     function addFile() {
-        let name = prompt("Filename (e.g. data.py):");
+        let name = prompt("Filename (e.g. scripts.py):");
         if (name) { if (!name.includes('.')) name += '.py'; savedFiles[name] = ""; currentSession[name] = ""; switchFile(name); }
     }
 
@@ -244,9 +232,7 @@
         a.download = activeFile; a.click();
     }
 
-    function toggleModal(id) { document.getElementById('overlay').style.display = 'block'; document.getElementById(id).style.display = 'flex'; }
-    function closeAllModals() { document.getElementById('overlay').style.display = 'none'; document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
-
+    // Python 執行邏輯
     async function runScript() {
         const out = document.getElementById('console-output');
         const panel = document.getElementById('console-panel');
@@ -268,6 +254,7 @@
         panel.scrollTop = panel.scrollHeight;
     }
 
+    // 快捷鍵監聽
     window.addEventListener('keydown', e => {
         if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); runScript(); }
         if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveFile(); }
