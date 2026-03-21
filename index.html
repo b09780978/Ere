@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ere Lite IDE - Auto-Dep v2.0</title>
+    <title>Ere Lite IDE - Ultimate Pro</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
@@ -17,14 +17,12 @@
         .navbar { background: var(--nav); height: 45px; display: flex; align-items: center; padding: 0 10px; border-bottom: 1px solid #000; flex-shrink: 0; z-index: 100; }
         .nav-title { font-weight: bold; color: var(--accent); font-size: 14px; margin-right: 10px; cursor: pointer; }
         .nav-btns { display: flex; gap: 5px; margin-left: auto; }
-        .btn { background: #333; color: #ccc; border: 1px solid #555; padding: 6px 10px; cursor: pointer; font-size: 12px; border-radius: 4px; }
+        .btn { background: #333; color: #ccc; border: 1px solid #555; padding: 6px 10px; cursor: pointer; font-size: 11px; border-radius: 4px; }
         
-        /* Mobile Tool Bar */
+        /* Mobile Tools */
         .mobile-tools { display: flex; background: #333; padding: 6px; gap: 6px; border-bottom: 1px solid var(--border); overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-        .mobile-tools::-webkit-scrollbar { display: none; }
         .tool-btn { background: #444; color: #eee; border: 1px solid #666; padding: 6px 14px; border-radius: 4px; font-size: 14px; flex-shrink: 0; min-width: 48px; text-align: center; }
 
-        /* Layout */
         .main-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .upper-layout { flex: 1; display: flex; overflow: hidden; position: relative; }
         .sidebar { width: 220px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; z-index: 1000; }
@@ -34,22 +32,27 @@
             .sidebar.open { left: 0; box-shadow: 10px 0 20px rgba(0,0,0,0.5); }
         }
 
-        .file-list { flex: 1; overflow-y: auto; }
-        .file-item { padding: 14px 15px; font-size: 14px; cursor: pointer; display: flex; align-items: center; color: #cfcfc2; border-bottom: 1px solid #2d2e27; }
-        .file-item.active { background: #3e3d32; color: var(--blue); }
-        .dirty-dot { color: #fff; margin-left: 5px; font-weight: bold; display: none; }
-        .file-item.is-dirty .dirty-dot { display: inline; }
-
         .editor-section { flex: 1; display: flex; flex-direction: column; background: var(--bg); min-width: 0; }
         .CodeMirror { height: 100% !important; font-size: 16px; line-height: 1.5; }
 
-        /* Hint UI */
-        .CodeMirror-hints { z-index: 9999 !important; background: #2d2d2d !important; border: 1px solid #555 !important; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.8); }
-        .CodeMirror-hint { padding: 12px 18px !important; color: #ddd !important; font-size: 15px; border-bottom: 1px solid #3d3d3d; }
-        .CodeMirror-hint-active { background: var(--blue) !important; color: #000 !important; }
+        /* Output Tabs & Panels */
+        .output-tabs { display: flex; background: #000; border-top: 1px solid var(--border); }
+        .tab-btn { padding: 8px 15px; font-size: 11px; color: var(--gray); cursor: pointer; border-right: 1px solid var(--border); background: #1a1a1a; }
+        .tab-btn.active { background: #121212; color: var(--accent); font-weight: bold; }
 
-        /* Console */
-        #console-panel { height: 160px; background: #121212; border-top: 2px solid #000; padding: 12px; overflow-y: auto; font-size: 13px; color: #eee; flex-shrink: 0; }
+        .log-panel { 
+            height: 160px; 
+            background: #121212; 
+            padding: 10px; 
+            overflow: auto; 
+            font-size: 12px; 
+            color: #ccc; 
+            display: none; 
+            -webkit-overflow-scrolling: touch;
+        }
+        .log-panel.active { display: block; }
+        #console-output, #system-log { white-space: pre; font-family: monospace; }
+
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 999; }
     </style>
 </head>
@@ -57,10 +60,10 @@
 
 <nav class="navbar">
     <div class="nav-title" onclick="toggleSidebar()">☰ ERE LITE</div>
-    <div id="tab-indicator" style="font-size: 11px; color: var(--gray); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 100px;">main.py</div>
+    <div id="tab-indicator" style="font-size: 11px; color: var(--gray); text-overflow: ellipsis; white-space: nowrap; max-width: 100px;">main.py</div>
     <div class="nav-btns">
         <button class="btn" onclick="saveFile()" style="color:var(--blue)">Save</button>
-        <button class="btn" onclick="runScript()" style="color:var(--accent); font-weight:bold;">Run</button>
+        <button class="btn" onclick="runScript()" style="color:var(--accent); font-weight:bold;">Run (Ctrl+Enter)</button>
     </div>
 </nav>
 
@@ -73,11 +76,7 @@
     <button class="tool-btn" onclick="insertText(':')">:</button>
     <button class="tool-btn" onclick="insertText('(')">(</button>
     <button class="tool-btn" onclick="insertText(')')">)</button>
-    <button class="tool-btn" onclick="triggerImport()">Import</button>
-    <button class="tool-btn" onclick="exportFile()">Export</button>
 </div>
-
-<input type="file" id="file-input" style="display: none;" onchange="handleFileImport(event)">
 
 <div class="main-container">
     <div class="upper-layout">
@@ -85,21 +84,27 @@
             <div style="padding:15px; background:#1a1a1a; font-size:12px; color:var(--accent); display:flex; justify-content:space-between; align-items:center;">
                 FILES <span style="cursor:pointer; font-size:24px;" onclick="addFile()">+</span>
             </div>
-            <div id="file-list" class="file-list"></div>
+            <div id="file-list" style="flex:1; overflow-y:auto;"></div>
         </div>
         <div class="editor-section">
             <textarea id="code-editor"></textarea>
         </div>
     </div>
-    <div id="console-panel"><div id="console-output" style="white-space: pre-wrap;"></div></div>
+
+    <div class="output-tabs">
+        <div class="tab-btn active" onclick="switchTab('console')">CONSOLE</div>
+        <div class="tab-btn" onclick="switchTab('system')">SYSTEM LOG</div>
+    </div>
+    <div id="console-panel" class="log-panel active"><div id="console-output"></div></div>
+    <div id="system-panel" class="log-panel"><div id="system-log"></div></div>
 </div>
 
 <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
+<input type="file" id="file-input" style="display: none;" onchange="handleFileImport(event)">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/show-hint.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/anyword-hint.min.js"></script>
 
 <script>
     let pyodide = null;
@@ -111,13 +116,42 @@
     const editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
         mode: "python", theme: "monokai", lineNumbers: true, indentUnit: 4, matchBrackets: true,
         inputStyle: "contenteditable",
-        extraKeys: { "Ctrl-Space": "autocomplete" }
+        extraKeys: { 
+            "Ctrl-Enter": () => runScript(),
+            "Ctrl-S": () => saveFile()
+        }
     });
 
-    // 手機端自動補全監聽
+    // 快捷鍵補遺 (某些瀏覽器攔截 Ctrl-Enter)
+    window.addEventListener('keydown', e => {
+        if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); runScript(); }
+        if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveFile(); }
+    });
+
+    // Log 記錄功能
+    function logToSystem(msg, color = 'var(--gray)') {
+        const log = document.getElementById('system-log');
+        const div = document.createElement('div');
+        div.style.color = color;
+        div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        log.appendChild(div);
+        document.getElementById('system-panel').scrollTop = log.scrollHeight;
+    }
+
+    function switchTab(type) {
+        document.querySelectorAll('.tab-btn, .log-panel').forEach(el => el.classList.remove('active'));
+        if (type === 'console') {
+            document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+            document.getElementById('console-panel').classList.add('active');
+        } else {
+            document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+            document.getElementById('system-panel').classList.add('active');
+        }
+    }
+
+    // 自動補全與工具邏輯
     editor.on("keyup", function (cm, event) {
-        const excludedKeys = [13, 27, 37, 38, 39, 40, 9, 16, 17, 18];
-        if (excludedKeys.includes(event.keyCode)) return;
+        if ([13, 27, 37, 38, 39, 40, 9, 16, 17, 18].includes(event.keyCode)) return;
         const cur = cm.getCursor();
         const token = cm.getTokenAt(cur);
         if (token.string.match(/[a-zA-Z_\.]/)) {
@@ -134,27 +168,14 @@
         editor.focus();
     }
 
-    // 檔案狀態管理
-    Object.keys(currentSession).forEach(f => { if (currentSession[f] !== savedFiles[f]) dirtyFiles.add(f); });
-    editor.on("change", () => {
-        const val = editor.getValue();
-        currentSession[activeFile] = val;
-        localStorage.setItem('ere_session', JSON.stringify(currentSession));
-        if (val !== savedFiles[activeFile]) {
-            if (!dirtyFiles.has(activeFile)) { dirtyFiles.add(activeFile); renderSidebar(); }
-        } else {
-            if (dirtyFiles.has(activeFile)) { dirtyFiles.delete(activeFile); renderSidebar(); }
-        }
-    });
-
+    // 檔案與 UI 狀態
     function renderSidebar() {
         const list = document.getElementById('file-list');
         list.innerHTML = '';
         Object.keys(savedFiles).forEach(name => {
             const div = document.createElement('div');
-            div.className = `file-item ${name === activeFile ? 'active' : ''} ${dirtyFiles.has(name) ? 'is-dirty' : ''}`;
-            div.innerHTML = `<span style="flex:1; overflow:hidden;">${name}</span><span class="dirty-dot">•</span>
-                ${name !== 'main.py' ? `<span onclick="deleteFile(event, '${name}')" style="color:var(--pink); font-size:22px; margin-left:10px;">×</span>` : ''}`;
+            div.style = `padding: 14px 15px; font-size: 14px; cursor: pointer; color: ${name === activeFile ? 'var(--blue)' : '#cfcfc2'}; border-bottom: 1px solid #2d2e27; background: ${name === activeFile ? '#3e3d32' : 'transparent'}`;
+            div.innerHTML = `<span>${name}</span>${dirtyFiles.has(name) ? '<span style="color:#fff"> •</span>' : ''}`;
             div.onclick = () => { switchFile(name); if(window.innerWidth <= 768) toggleSidebar(); };
             list.appendChild(div);
         });
@@ -175,95 +196,62 @@
         renderSidebar();
     }
 
-    function addFile() {
-        let name = prompt("Filename:");
-        if (name) { if (!name.includes('.')) name += '.py'; savedFiles[name] = ""; currentSession[name] = ""; switchFile(name); }
-    }
-
     function saveFile() {
         savedFiles[activeFile] = editor.getValue();
         dirtyFiles.delete(activeFile);
         localStorage.setItem('ere_saved', JSON.stringify(savedFiles));
         renderSidebar();
+        logToSystem(`Saved ${activeFile}`, 'var(--blue)');
     }
 
-    function triggerImport() { document.getElementById('file-input').click(); }
-    function handleFileImport(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            savedFiles[file.name] = e.target.result;
-            currentSession[file.name] = e.target.result;
-            localStorage.setItem('ere_saved', JSON.stringify(savedFiles));
-            switchFile(file.name);
-        };
-        reader.readAsText(file);
+    function addFile() {
+        let name = prompt("Filename:");
+        if (name) { if (!name.includes('.')) name += '.py'; savedFiles[name] = ""; currentSession[name] = ""; switchFile(name); }
     }
 
-    function exportFile() {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([editor.getValue()]));
-        a.download = activeFile; a.click();
-    }
-
-    // --- 重點：Run 邏輯整合自動依賴安裝 ---
+    // 執行邏輯
     async function runScript() {
+        switchTab('console');
         const out = document.getElementById('console-output');
         const panel = document.getElementById('console-panel');
-        out.innerHTML = `<div style="color:var(--gray)"># Initializing Runtime...</div>`;
-        panel.scrollTop = 0;
+        out.innerHTML = "";
+        logToSystem(`Executing ${activeFile}...`);
 
         if (!pyodide) { 
+            logToSystem("Loading Pyodide Runtime...", 'var(--accent)');
             pyodide = await loadPyodide(); 
             await pyodide.loadPackage("micropip");
+            logToSystem("Runtime Ready.");
         }
 
         try {
-            const code = savedFiles[activeFile];
-            // 使用正則表達式偵測所有的 import 或 from ... import
+            const code = editor.getValue();
             const re = /^(?:import|from)\s+([a-zA-Z0-9_]+)/gm;
-            const matches = [...code.matchAll(re)];
-            const packages = [...new Set(matches.map(m => m[1]))].filter(p => !['math', 'os', 'sys', 'json', 're', 'time'].includes(p));
+            const packages = [...new Set([...code.matchAll(re)].map(m => m[1]))].filter(p => !['math', 'os', 'sys'].includes(p));
 
             if (packages.length > 0) {
-                out.innerHTML += `<div style="color:var(--blue)"># Checking dependencies: ${packages.join(', ')}...</div>`;
+                logToSystem(`Checking dependencies: ${packages.join(', ')}`);
                 for (let pkg of packages) {
-                    try {
-                        // 優先嘗試使用 pyodide 內建庫 (如 numpy, pandas)
-                        await pyodide.loadPackage(pkg);
-                    } catch (e) {
-                        // 如果 loadPackage 失敗，嘗試使用 micropip (純 python 庫)
-                        try {
-                            const micropip = pyodide.pyimport("micropip");
-                            await micropip.install(pkg);
-                        } catch (e2) {
-                            out.innerHTML += `<div style="color:var(--pink)">! Warning: Could not load ${pkg}</div>`;
-                        }
+                    try { await pyodide.loadPackage(pkg); logToSystem(`Loaded ${pkg}`); } 
+                    catch (e) { 
+                        try { const mp = pyodide.pyimport("micropip"); await mp.install(pkg); logToSystem(`Installed ${pkg} via micropip`); }
+                        catch (e2) { logToSystem(`Failed to install ${pkg}`, 'var(--pink)'); }
                     }
                 }
             }
 
-            out.innerHTML = `<div style="color:var(--gray)"># Executing ${activeFile}...</div><br>`;
             pyodide.setStdout({ batched: (s) => { 
                 out.appendChild(document.createTextNode(s + "\n")); 
                 panel.scrollTop = panel.scrollHeight; 
             }});
 
             await pyodide.runPythonAsync(code);
-            const d = document.createElement('div'); d.style.color = 'var(--gray)'; d.style.marginTop = "10px"; d.innerText = "# [Process Completed]"; out.appendChild(d);
+            logToSystem("Process Completed Successfully.", 'var(--accent)');
         } catch (err) {
-            const e = document.createElement('div'); e.style.color = 'var(--pink)'; e.style.marginTop = "10px"; e.innerText = err.message; out.appendChild(e);
+            logToSystem(err.message, 'var(--pink)');
+            switchTab('system'); // 報錯時自動切換到 Log 方便查看
         }
-        panel.scrollTop = panel.scrollHeight;
     }
-
-    window.addEventListener('keydown', e => {
-        if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); runScript(); }
-        if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveFile(); }
-        if (e.ctrlKey && e.key === 'o') { e.preventDefault(); triggerImport(); }
-        if (e.ctrlKey && e.key === 'e') { e.preventDefault(); exportFile(); }
-    });
 
     renderSidebar();
     editor.setValue(currentSession[activeFile] || "");
