@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ere Lite IDE - Mobile</title>
+    <title>Ere Lite IDE - Ultimate</title>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
@@ -13,44 +13,55 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Consolas', monospace; margin: 0; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; position: fixed; width: 100%; }
         
-        /* Navbar */
+        /* Navigation */
         .navbar { background: var(--nav); height: 45px; display: flex; align-items: center; padding: 0 10px; border-bottom: 1px solid #000; flex-shrink: 0; z-index: 100; }
         .nav-title { font-weight: bold; color: var(--accent); font-size: 14px; margin-right: 10px; cursor: pointer; }
         .nav-btns { display: flex; gap: 5px; margin-left: auto; }
-        .btn { background: #333; color: #ccc; border: 1px solid #555; padding: 5px 8px; cursor: pointer; font-size: 11px; border-radius: 3px; }
+        .btn { background: #333; color: #ccc; border: 1px solid #555; padding: 6px 10px; cursor: pointer; font-size: 12px; border-radius: 4px; }
         
-        /* Mobile Helper Bar (鍵盤上方工具列) */
-        .mobile-tools { display: none; background: #333; padding: 5px; gap: 5px; border-bottom: 1px solid var(--border); overflow-x: auto; white-space: nowrap; }
-        @media (max-width: 768px) { .mobile-tools { display: flex; } .sidebar { position: absolute; left: -200px; transition: 0.3s; z-index: 99; height: calc(100% - 45px); } .sidebar.open { left: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.5); } }
+        /* Mobile Tool Bar */
+        .mobile-tools { display: flex; background: #333; padding: 6px; gap: 6px; border-bottom: 1px solid var(--border); overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        .mobile-tools::-webkit-scrollbar { display: none; }
+        .tool-btn { background: #444; color: #eee; border: 1px solid #666; padding: 5px 14px; border-radius: 4px; font-size: 14px; flex-shrink: 0; min-width: 45px; text-align: center; }
 
         /* Layout */
         .main-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .upper-layout { flex: 1; display: flex; overflow: hidden; position: relative; }
-        .sidebar { width: 200px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-header { padding: 12px; font-size: 11px; color: var(--gray); font-weight: bold; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+        .sidebar { width: 220px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s; }
+        
+        @media (max-width: 768px) {
+            .sidebar { position: absolute; left: -220px; height: 100%; z-index: 99; }
+            .sidebar.open { left: 0; box-shadow: 10px 0 20px rgba(0,0,0,0.5); }
+        }
+
         .file-list { flex: 1; overflow-y: auto; }
-        .file-item { padding: 12px 15px; font-size: 14px; cursor: pointer; display: flex; align-items: center; color: #cfcfc2; border-left: 3px solid transparent; }
-        .file-item.active { background: #3e3d32; color: var(--blue); border-left-color: var(--blue); }
-        .dirty-dot { color: #fff; margin-left: 5px; display: none; }
+        .file-item { padding: 14px 15px; font-size: 14px; cursor: pointer; display: flex; align-items: center; color: #cfcfc2; border-bottom: 1px solid #2d2e27; }
+        .file-item.active { background: #3e3d32; color: var(--blue); }
+        .dirty-dot { color: #fff; margin-left: 5px; font-weight: bold; display: none; }
         .file-item.is-dirty .dirty-dot { display: inline; }
 
         .editor-section { flex: 1; display: flex; flex-direction: column; background: var(--bg); min-width: 0; }
-        .CodeMirror { height: 100% !important; font-size: 16px; } /* 手動放大字體更易點擊 */
+        .CodeMirror { height: 100% !important; font-size: 16px; line-height: 1.5; }
 
-        #console-panel { height: 150px; background: #121212; border-top: 2px solid #000; padding: 10px; overflow-y: auto; font-size: 12px; color: #eee; flex-shrink: 0; }
+        /* Hint Menu UI */
+        .CodeMirror-hints { background: #2d2d2d !important; border: 1px solid #555 !important; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .CodeMirror-hint { padding: 12px 18px !important; color: #ddd !important; font-size: 14px; border-bottom: 1px solid #3d3d3d; }
+        .CodeMirror-hint-active { background: var(--blue) !important; color: #000 !important; }
+
+        #console-panel { height: 160px; background: #121212; border-top: 2px solid #000; padding: 12px; overflow-y: auto; font-size: 13px; color: #eee; flex-shrink: 0; }
         
-        /* Modals */
-        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 320px; background: #252526; border: 1px solid var(--border); display: none; flex-direction: column; z-index: 1001; border-radius: 8px; }
-        .modal-header { background: #333; padding: 10px; font-size: 12px; display: flex; justify-content: space-between; border-radius: 8px 8px 0 0; }
-        .modal-body { padding: 15px; font-size: 13px; color: #ccc; max-height: 60vh; overflow-y: auto; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 1000; }
+        /* Modal & Overlay */
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; background: #252526; border: 1px solid var(--border); display: none; flex-direction: column; z-index: 1001; border-radius: 8px; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        .modal-header { background: #333; padding: 12px; font-size: 12px; display: flex; justify-content: space-between; border-radius: 8px 8px 0 0; }
+        .modal-body { padding: 20px; font-size: 14px; color: #ccc; line-height: 1.6; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 1000; }
     </style>
 </head>
 <body>
 
 <nav class="navbar">
     <div class="nav-title" onclick="toggleSidebar()">☰ ERE LITE</div>
-    <div id="tab-indicator" style="font-size: 11px; color: var(--gray); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80px;">main.py</div>
+    <div id="tab-indicator" style="font-size: 11px; color: var(--gray); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 100px;">main.py</div>
     <div class="nav-btns">
         <button class="btn" onclick="toggleModal('wiki-modal')">Wiki</button>
         <button class="btn" onclick="saveFile()" style="color:var(--blue)">Save</button>
@@ -59,13 +70,16 @@
 </nav>
 
 <div class="mobile-tools">
-    <button class="btn" onclick="editor.undo()">Undo</button>
-    <button class="btn" onclick="insertText('\t')">Tab</button>
-    <button class="btn" onclick="insertText(':')">:</button>
-    <button class="btn" onclick="insertText('(')">(</button>
-    <button class="btn" onclick="insertText(')')">)</button>
-    <button class="btn" onclick="triggerImport()">Import</button>
-    <button class="btn" onclick="exportFile()">Export</button>
+    <button class="tool-btn" style="color:var(--blue); font-weight:bold;" onclick="triggerHint()">Hint</button>
+    <button class="tool-btn" onclick="editor.undo()">Undo</button>
+    <button class="tool-btn" onclick="insertText('\t')">Tab</button>
+    <button class="tool-btn" onclick="insertQuote('\"')">"</button>
+    <button class="tool-btn" onclick="insertQuote('\'')">'</button>
+    <button class="tool-btn" onclick="insertText(':')">:</button>
+    <button class="tool-btn" onclick="insertText('(')">(</button>
+    <button class="tool-btn" onclick="insertText(')')">)</button>
+    <button class="tool-btn" onclick="triggerImport()">Import</button>
+    <button class="tool-btn" onclick="exportFile()">Export</button>
 </div>
 
 <input type="file" id="file-input" style="display: none;" onchange="handleFileImport(event)">
@@ -73,7 +87,9 @@
 <div class="main-container">
     <div class="upper-layout">
         <div id="sidebar" class="sidebar">
-            <div class="sidebar-header">FILES <span style="cursor:pointer; font-size:18px;" onclick="addFile()">+</span></div>
+            <div style="padding:15px; background:#1a1a1a; font-size:12px; color:var(--accent); display:flex; justify-content:space-between; align-items:center;">
+                FILES <span style="cursor:pointer; font-size:24px;" onclick="addFile()">+</span>
+            </div>
             <div id="file-list" class="file-list"></div>
         </div>
         <div class="editor-section">
@@ -88,18 +104,18 @@
 <div id="wiki-modal" class="modal">
     <div class="modal-header"><span>IDE WIKI</span><span style="cursor:pointer" onclick="closeAllModals()">✕</span></div>
     <div class="modal-body">
-        <b>Shortcuts (PC):</b><br>
-        Ctrl+S: Save | Ctrl+Enter: Run<br>
-        Ctrl+O: Import | Ctrl+E: Export<br><br>
-        <b>Mobile Tip:</b><br>
-        點擊左上角 ☰ 切換檔案。<br>
-        使用上方工具列進行常用操作。
+        • 點擊 <b>☰</b> 切換或刪除檔案<br>
+        • <b>Hint</b> 鈕強制呼叫建議選單<br>
+        • 選取文字後點 <b>"</b> 或 <b>'</b> 可快速包覆<br>
+        • 執行前請務必點擊 <b>Save</b><br>
+        • 支援匯入匯出任何文字檔案
     </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/anyword-hint.min.js"></script>
 
 <script>
     let pyodide = null;
@@ -110,10 +126,41 @@
 
     const editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
         mode: "python", theme: "monokai", lineNumbers: true, indentUnit: 4, matchBrackets: true,
-        inputStyle: "contenteditable", // 手機端輸入相容性較好
+        inputStyle: "contenteditable", // 手機相容性
         extraKeys: { "Ctrl-Space": "autocomplete" }
     });
 
+    // 智慧插入功能
+    function insertText(text) { editor.replaceRange(text, editor.getCursor()); editor.focus(); }
+    
+    function insertQuote(q) {
+        const selection = editor.getSelection();
+        if (selection.length > 0) {
+            editor.replaceSelection(q + selection + q);
+        } else {
+            editor.replaceRange(q, editor.getCursor());
+        }
+        editor.focus();
+    }
+
+    function triggerHint() {
+        editor.showHint({ completeSingle: false, container: document.body });
+    }
+
+    // 自動補全邏輯 (行動端優化)
+    editor.on("inputRead", function(cm, change) {
+        if (change.origin === "+input") {
+            const cur = cm.getCursor();
+            const token = cm.getTokenAt(cur);
+            if (token.string.match(/[a-zA-Z_\.]/)) {
+                setTimeout(() => {
+                    if (!cm.state.completionActive) triggerHint();
+                }, 150);
+            }
+        }
+    });
+
+    // 狀態管理
     Object.keys(currentSession).forEach(f => { if (currentSession[f] !== savedFiles[f]) dirtyFiles.add(f); });
 
     editor.on("change", () => {
@@ -133,8 +180,8 @@
         Object.keys(savedFiles).forEach(name => {
             const div = document.createElement('div');
             div.className = `file-item ${name === activeFile ? 'active' : ''} ${dirtyFiles.has(name) ? 'is-dirty' : ''}`;
-            div.innerHTML = `<span style="flex:1; overflow:hidden;">${name}</span><span class="dirty-dot">•</span>
-                ${name !== 'main.py' ? `<span onclick="deleteFile(event, '${name}')" style="margin-left:10px; color:#f92672;">×</span>` : ''}`;
+            div.innerHTML = `<span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${name}</span><span class="dirty-dot">•</span>
+                ${name !== 'main.py' ? `<span onclick="deleteFile(event, '${name}')" style="color:var(--pink); font-size:22px; margin-left:10px;">×</span>` : ''}`;
             div.onclick = () => { switchFile(name); if(window.innerWidth <= 768) toggleSidebar(); };
             list.appendChild(div);
         });
@@ -143,28 +190,17 @@
 
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
     
-    function insertText(text) {
-        const doc = editor.getDoc();
-        const cursor = doc.getCursor();
-        doc.replaceRange(text, cursor);
-        editor.focus();
-    }
-
     function switchFile(name) {
-        if (!savedFiles[name]) return;
         activeFile = name;
         localStorage.setItem('ere_active', name);
         editor.setValue(currentSession[name] || "");
+        editor.clearHistory();
         renderSidebar();
     }
 
     function addFile() {
-        let name = prompt("Filename:");
-        if (name) {
-            if (savedFiles[name]) return;
-            savedFiles[name] = ""; currentSession[name] = "";
-            switchFile(name);
-        }
+        let name = prompt("Filename (e.g. data.py):");
+        if (name) { if (!name.includes('.')) name += '.py'; savedFiles[name] = ""; currentSession[name] = ""; switchFile(name); }
     }
 
     function saveFile() {
@@ -175,7 +211,6 @@
     }
 
     function triggerImport() { document.getElementById('file-input').click(); }
-    
     function handleFileImport(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -190,38 +225,31 @@
     }
 
     function exportFile() {
-        const blob = new Blob([editor.getValue()], {type: "text/plain"});
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = activeFile;
-        a.click();
+        a.href = URL.createObjectURL(new Blob([editor.getValue()], {type: 'text/plain'}));
+        a.download = activeFile; a.click();
     }
 
-    function toggleModal(id) {
-        document.getElementById('overlay').style.display = 'block';
-        document.getElementById(id).style.display = 'flex';
-    }
-
-    function closeAllModals() {
-        document.getElementById('overlay').style.display = 'none';
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(m => m.style.display = 'none');
-    }
+    function toggleModal(id) { document.getElementById('overlay').style.display = 'block'; document.getElementById(id).style.display = 'flex'; }
+    function closeAllModals() { document.getElementById('overlay').style.display = 'none'; document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
     async function runScript() {
         const out = document.getElementById('console-output');
         const panel = document.getElementById('console-panel');
         out.innerHTML = `<div style="color:var(--gray)"># Executing ${activeFile}...</div><br>`;
+        panel.scrollTop = 0;
+
         if (!pyodide) { pyodide = await loadPyodide(); await pyodide.loadPackage("micropip"); }
+        
         try {
             pyodide.setStdout({ batched: (s) => { 
                 out.appendChild(document.createTextNode(s + "\n")); 
-                panel.scrollTop = panel.scrollHeight;
+                panel.scrollTop = panel.scrollHeight; 
             }});
             await pyodide.runPythonAsync(savedFiles[activeFile]);
-            const d = document.createElement('div'); d.style.color = 'var(--gray)'; d.innerText = "\n# [Done]"; out.appendChild(d);
+            const d = document.createElement('div'); d.style.color = 'var(--gray)'; d.style.marginTop = "8px"; d.innerText = "# [Process Completed]"; out.appendChild(d);
         } catch (err) {
-            const e = document.createElement('div'); e.style.color = 'var(--pink)'; e.innerText = err.message; out.appendChild(e);
+            const e = document.createElement('div'); e.style.color = 'var(--pink)'; e.style.marginTop = "8px"; e.innerText = err.message; out.appendChild(e);
         }
         panel.scrollTop = panel.scrollHeight;
     }
@@ -229,6 +257,8 @@
     window.addEventListener('keydown', e => {
         if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); runScript(); }
         if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveFile(); }
+        if (e.ctrlKey && e.key === 'o') { e.preventDefault(); triggerImport(); }
+        if (e.ctrlKey && e.key === 'e') { e.preventDefault(); exportFile(); }
     });
 
     renderSidebar();
