@@ -103,6 +103,7 @@
 
 <script>
     let pyodide = null;
+    let py_std_libs = null;
     let savedFiles = JSON.parse(localStorage.getItem('ere_saved')) || { 'main.py': '' };
     let activeFile = localStorage.getItem('ere_active') || 'main.py';
 
@@ -156,11 +157,16 @@
         switchTab('console');
         const out = document.getElementById('console-output');
         out.innerText = "Executing...\n";
-        if (!pyodide) { pyodide = await loadPyodide(); await pyodide.loadPackage("micropip"); }
+        if (!pyodide) { 
+            pyodide = await loadPyodide();
+            await pyodide.loadPackage("micropip");
+            let py_lib_set_obj = await pyodide.runPythonAsync('import sys\nset(sys.stdlib_module_names)'); 
+            py_std_libs = py_lib_set_obj.toJs({create_proxies : false});
+        }
         try {
             const code = editor.getValue();
             const re = /^(?:import|from)\s+([a-zA-Z0-9_]+)/gm;
-            const pkgs = [...new Set([...code.matchAll(re)].map(m => m[1]))].filter(p => !['math', 'os', 'sys'].includes(p));
+            const pkgs = [...new Set([...code.matchAll(re)].map(m => m[1]))].filter(p => !py_std_libs.has(p));
             if (pkgs.length > 0) {
                 logToSystem(`Import: ${pkgs.join(', ')}`);
                 for (let p of pkgs) { try { await pyodide.loadPackage(p); } catch { await pyodide.pyimport("micropip").install(p); } }
