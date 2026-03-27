@@ -161,7 +161,7 @@
             pyodide = await loadPyodide();
             await pyodide.loadPackage("micropip");
             let py_lib_set_obj = await pyodide.runPythonAsync('import sys\nset(sys.stdlib_module_names)'); 
-            py_std_libs = py_lib_set_obj.toJs({create_proxies : false});
+            py_std_libs = py_lib_set_obj.toJs({create_pyproxies  : false});
         }
         try {
             const code = editor.getValue();
